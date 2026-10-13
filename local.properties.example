@@ -1,0 +1,5 @@
+# Copy these lines into local.properties (Android Studio creates that file for you).
+# Never commit local.properties.
+GEMINI_API_KEY=your_key_from_aistudio.google.com
+# Optional: change the model if Google renames/retires it
+GEMINI_MODEL=gemini-2.5-flash

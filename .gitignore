@@ -1,0 +1,31 @@
+local.properties
+app/google-services.json
+google-services.json
+keystore.properties
+*.jks
+*.keystore
+*.pem
+.env
+
+# --- Gradle / build output ---
+.gradle/
+build/
+app/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.log
+
+# --- Android Studio / IDEs ---
+.idea/
+*.iml
+.navigation/
+.vscode/
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
