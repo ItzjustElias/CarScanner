@@ -72,6 +72,7 @@ your **garage** with a collection of cards.
 <div align="center">
 <img src="./docs/images/car_scanner_promo_tilted.png" alt="CarScanner App" width="1920">
 </div>
+
 > [!TIP]
 > **Designed to be forked.** Anyone can run their own copy on their own phone for **free**, using their own
 > Firebase project and their own Gemini API key. **No server required.**
