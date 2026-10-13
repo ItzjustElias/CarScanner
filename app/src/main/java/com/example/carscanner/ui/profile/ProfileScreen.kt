@@ -54,6 +54,7 @@ import com.example.carscanner.domain.Rarity
 import com.example.carscanner.ui.components.ConfirmDialog
 import com.example.carscanner.ui.components.RarityChip
 import com.example.carscanner.ui.components.StatTile
+import com.example.carscanner.ui.components.formatCompactUsd
 import com.example.carscanner.ui.theme.Gold
 import com.example.carscanner.ui.theme.rarityBrush
 import com.google.firebase.auth.FirebaseUser
@@ -96,7 +97,6 @@ fun ProfileScreen(
 
     val level = Levels.forPoints(stats.points)
     val number = NumberFormat.getIntegerInstance()
-    val money = NumberFormat.getCurrencyInstance(Locale.US).apply { maximumFractionDigits = 0 }
 
     Column(
         Modifier
@@ -156,7 +156,7 @@ fun ProfileScreen(
             StatTile("Unique models", number.format(stats.uniqueModels), Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Garage value", money.format(stats.totalValue), Modifier.weight(1f))
+            StatTile("Garage value", formatCompactUsd(stats.totalValue), Modifier.weight(1f))
             StatTile("Scans this week", number.format(stats.scansThisWeek), Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -176,7 +176,7 @@ fun ProfileScreen(
 
         stats.bestCar?.let { Highlight("Highest scoring", it, "+${it.points} pts") }
         stats.priciestCar?.let { car ->
-            Highlight("Most valuable", car, car.valueUsd?.let { money.format(it) } ?: "")
+            Highlight("Most valuable", car, car.valueUsd?.let { formatCompactUsd(it) } ?: "")
         }
 
         stats.firstScan?.let {

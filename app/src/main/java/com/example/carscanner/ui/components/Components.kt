@@ -31,7 +31,6 @@ import com.example.carscanner.domain.Rarity
 import com.example.carscanner.ui.theme.rarityBrush
 import java.io.File
 import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun RarityDot(rarity: Rarity, modifier: Modifier = Modifier) {
@@ -95,7 +94,6 @@ fun ConfirmDialog(
 
 @Composable
 fun CarDetailContent(car: CarEntity, modifier: Modifier = Modifier) {
-    val money = NumberFormat.getCurrencyInstance(Locale.US).apply { maximumFractionDigits = 0 }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         AsyncImage(
             model = File(car.imagePath),
@@ -114,7 +112,8 @@ fun CarDetailContent(car: CarEntity, modifier: Modifier = Modifier) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Value", car.valueUsd?.let { money.format(it) } ?: "Unknown", Modifier.weight(1f))
+            StatTile("Value", car.valueUsd?.let { formatCompactUsd(it) } ?: "Unknown", Modifier.weight(1f))
+            car.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown"
             StatTile(
                 "Built",
                 car.productionCount?.let { NumberFormat.getIntegerInstance().format(it) } ?: "Unknown",
