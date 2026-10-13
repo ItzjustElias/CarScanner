@@ -38,7 +38,8 @@ import com.example.carscanner.ui.components.RarityChip
 import com.example.carscanner.ui.components.StatTile
 import com.example.carscanner.ui.theme.Gold
 import java.text.NumberFormat
-import java.util.Locale
+import com.example.carscanner.ui.components.formatCompact
+import com.example.carscanner.ui.components.formatCompactUsd
 
 sealed interface CorrectionState {
     data object Idle : CorrectionState
@@ -115,7 +116,6 @@ fun CorrectionContent(
 @Composable
 private fun PreviewCard(car: CarEntity, preview: CorrectionPreview, onConfirm: (CorrectionPreview) -> Unit) {
     val scan = preview.scan
-    val money = NumberFormat.getCurrencyInstance(Locale.US).apply { maximumFractionDigits = 0 }
     Column(
         Modifier
             .fillMaxWidth()
@@ -132,7 +132,8 @@ private fun PreviewCard(car: CarEntity, preview: CorrectionPreview, onConfirm: (
         }
         RarityChip(scan.rarity)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            StatTile("Value", scan.valueUsd?.let { money.format(it) } ?: "Unknown", Modifier.weight(1f))
+            StatTile("Value", scan.valueUsd?.let { formatCompactUsd(it) } ?: "Unknown", Modifier.weight(1f))
+            scan.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown"
             StatTile(
                 "Built",
                 scan.productionCount?.let { NumberFormat.getIntegerInstance().format(it) } ?: "Unknown",
