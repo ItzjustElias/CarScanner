@@ -70,6 +70,8 @@ Take a photo of a car (or pick one from your gallery) and CarScanner tells you w
 and how much it's worth. Every scan earns points based on rarity and value, so you level up and fill
 your **garage** with a collection of cards.
 
+<img src="./docs/images/car_scanner_promo_tilted.png" alt="CarScanner App" width="500">
+
 > [!TIP]
 > **Designed to be forked.** Anyone can run their own copy on their own phone for **free**, using their own
 > Firebase project and their own Gemini API key. **No server required.**
@@ -267,6 +269,7 @@ app/src/main/java/com/example/carscanner/
     ├── theme/        colors, typography, animated rarity styling
     └── components/   shared widgets
 ```
+<img src="./docs/images/car_scanner_promo_not_tilted.png" alt="CarScanner App" width="500">
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
