@@ -1,0 +1,21 @@
+name: Bug Report
+description: File a bug report to help us improve the AI scanner app
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened...
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: Android Version / Device
+      description: What device and Android version are you using?
+      placeholder: e.g., Pixel 7, Android 14
+    validations:
+      required: true
