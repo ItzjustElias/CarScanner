@@ -16,6 +16,6 @@ body:
     attributes:
       label: Android Version / Device
       description: What device and Android version are you using?
-      placeholder: e.g., Pixel 7, Android 14
+      placeholder: e.g., Pixel 11, Android 16
     validations:
       required: true
