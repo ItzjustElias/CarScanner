@@ -17,6 +17,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
+// uses gemini API ( the free tier )
 class GeminiService(
     private val apiKey: String,
     private val model: String,
@@ -24,12 +25,12 @@ class GeminiService(
 ) {
     private class HttpFailure(val code: Int) : Exception()
 
-
     private val client = OkHttpClient.Builder()
         .connectTimeout(20, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .build()
 
+    // identify a car from a picture
     suspend fun analyze(jpegBase64: String): AnalysisOutcome {
         val image = JSONObject().put(
             "inline_data",
@@ -52,6 +53,7 @@ class GeminiService(
                 try {
                     return@withContext request(parts, grounded = true)
                 } catch (e: HttpFailure) {
+                    // fall through to the plain request below
                 }
             }
             request(parts, grounded = false)
@@ -68,6 +70,7 @@ class GeminiService(
         val body = JSONObject()
             .put("contents", JSONArray().put(JSONObject().put("parts", partsJson)))
         if (grounded) {
+            // Search can't be combined with JSON mode, so the prompt asks for JSON and we extract it.
             body.put("tools", JSONArray().put(JSONObject().put("google_search", JSONObject())))
         } else {
             config.put("responseMimeType", "application/json")
@@ -109,7 +112,7 @@ class GeminiService(
 
             val start = raw.indexOf('{')
             val end = raw.lastIndexOf('}')
-            if (start < 0 || end <= start) throw ScanException("Couldn't understand the AI's answer. Try again.")
+            if (start !in 0..<end) throw ScanException("Couldn't understand the AI's answer. Try again.")
             val json = JSONObject(raw.substring(start, end + 1))
 
             if (!json.optBoolean("is_car", false)) return AnalysisOutcome.NotACar
@@ -131,7 +134,7 @@ class GeminiService(
                 )
             )
         } catch (e: JSONException) {
-            throw ScanException("Couldn't understand the AI's answer. Try again.")
+            throw ScanException("Couldn't understand the AI's answer. Try again.$e")
         }
     }
 
@@ -160,11 +163,11 @@ class GeminiService(
         """.trimIndent()
 
         val PHOTO_PROMPT = "You are an expert car identifier for a car-spotting game. " +
-                "Identify the main car in the photo. is_car must be false if no real car is clearly visible.\n" + SPEC
+            "Identify the main car in the photo. is_car must be false if no real car is clearly visible.\n" + SPEC
 
         fun lookupPrompt(description: String) = "You are an expert car encyclopedia for a car-spotting game. " +
-                "The player says the car is: \"$description\". Treat that as the correct identification and fill in " +
-                "the details for that exact car (use the year or generation they mention, otherwise the most typical one). " +
-                "is_car must be false only if this is not a real car model.\n" + SPEC
+            "The player says the car is: \"$description\". Treat that as the correct identification and fill in " +
+            "the details for that exact car (use the year or generation they mention, otherwise the most typical one). " +
+            "is_car must be false only if this is not a real car model.\n" + SPEC
     }
 }

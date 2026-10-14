@@ -48,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.carscanner.CarScannerApp
 import com.example.carscanner.data.CarEntity
+import com.example.carscanner.domain.AppUser
 import com.example.carscanner.data.ProfileStats
 import com.example.carscanner.domain.Levels
 import com.example.carscanner.domain.Rarity
@@ -57,7 +58,6 @@ import com.example.carscanner.ui.components.StatTile
 import com.example.carscanner.ui.components.formatCompactUsd
 import com.example.carscanner.ui.theme.Gold
 import com.example.carscanner.ui.theme.rarityBrush
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -69,7 +69,6 @@ import java.io.File
 import java.text.DateFormat
 import java.text.NumberFormat
 import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel(app: Application) : AndroidViewModel(app) {
@@ -85,7 +84,7 @@ class ProfileViewModel(app: Application) : AndroidViewModel(app) {
 
 @Composable
 fun ProfileScreen(
-    user: FirebaseUser,
+    user: AppUser,
     onBack: () -> Unit,
     onSignOut: () -> Unit,
     vm: ProfileViewModel = viewModel(),

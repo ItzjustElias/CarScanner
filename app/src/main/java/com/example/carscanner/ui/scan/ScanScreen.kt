@@ -46,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -60,10 +61,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.carscanner.domain.Rarity
+import kotlinx.coroutines.launch
 import com.example.carscanner.ui.components.CarDetailContent
 import com.example.carscanner.ui.components.RarityChip
 import com.example.carscanner.ui.theme.Gold
+import com.example.carscanner.domain.Rarity
 import com.example.carscanner.ui.theme.color
 import com.example.carscanner.ui.theme.rarityBrush
 
@@ -75,7 +77,7 @@ fun ScanScreen(userId: String, onClose: () -> Unit, vm: ScanViewModel = viewMode
     var hasCamera by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
-                    PackageManager.PERMISSION_GRANTED
+                PackageManager.PERMISSION_GRANTED
         )
     }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -153,7 +155,7 @@ fun ScanScreen(userId: String, onClose: () -> Unit, vm: ScanViewModel = viewMode
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     CircularProgressIndicator(color = Gold)
-                    Text("Identifying your car", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)
+                    Text("Identifying your car", style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
@@ -166,6 +168,12 @@ fun ScanScreen(userId: String, onClose: () -> Unit, vm: ScanViewModel = viewMode
             onDismiss = vm::reset,
         )
         is ScanUiState.Error -> InfoDialog("Scan failed", s.message, onDismiss = vm::reset)
+        is ScanUiState.AlreadyScanned -> InfoDialog(
+            "Already in your garage",
+            "This photo is already saved as ${s.car.title}. Take a new photo to earn more points.",
+            confirmText = "OK",
+            onDismiss = vm::reset,
+        )
         else -> Unit
     }
     if (captureFailed) {
@@ -174,12 +182,17 @@ fun ScanScreen(userId: String, onClose: () -> Unit, vm: ScanViewModel = viewMode
 }
 
 @Composable
-private fun InfoDialog(title: String, message: String, onDismiss: () -> Unit) {
+private fun InfoDialog(
+    title: String,
+    message: String,
+    confirmText: String = "Try again",
+    onDismiss: () -> Unit,
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(message) },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Try again") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(confirmText) } },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
     )
 }

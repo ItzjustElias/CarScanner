@@ -5,7 +5,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.carscanner.domain.Rarity
 
-@Entity(tableName = "cars", indices = [Index("userId")])
+@Entity(tableName = "cars", indices = [Index("userId"), Index("userId", "photoHash")])
 data class CarEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val userId: String,
@@ -22,7 +22,9 @@ data class CarEntity(
     val imagePath: String,
     val scannedAt: Long,
     val photoHash: String? = null,
-    ) {
+    val note: String = "",
+    val spottedAt: Long = 0L,
+) {
     val rarityEnum: Rarity get() = Rarity.parse(rarity)
     val title: String get() = "$make $model".trim()
 }

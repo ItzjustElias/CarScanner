@@ -35,6 +35,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DirectionsCar
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -58,6 +59,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,6 +69,7 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -83,19 +86,20 @@ import androidx.paging.compose.itemKey
 import coil.compose.AsyncImage
 import com.example.carscanner.CarScannerApp
 import com.example.carscanner.data.CarEntity
+import com.example.carscanner.domain.AppUser
 import com.example.carscanner.data.CorrectionPreview
 import com.example.carscanner.data.ProfileStats
 import com.example.carscanner.domain.ScanException
 import com.example.carscanner.domain.Levels
 import com.example.carscanner.domain.Rarity
 import com.example.carscanner.domain.SortMode
+import com.example.carscanner.domain.Tags
 import com.example.carscanner.ui.components.CarDetailContent
 import com.example.carscanner.ui.components.ConfirmDialog
 import com.example.carscanner.ui.components.RarityChip
 import com.example.carscanner.ui.components.RarityDot
 import com.example.carscanner.ui.theme.Gold
 import com.example.carscanner.ui.theme.rarityBrush
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -118,6 +122,7 @@ private data class GarageParams(
     val userId: String,
     val query: String,
     val rarity: Rarity?,
+    val tag: String?,
     val sort: SortMode,
 )
 
@@ -128,19 +133,22 @@ class GarageViewModel(app: Application) : AndroidViewModel(app) {
     private val userId = MutableStateFlow("")
     private val _query = MutableStateFlow("")
     private val _rarity = MutableStateFlow<Rarity?>(null)
+    private val _tag = MutableStateFlow<String?>(null)
     private val _sort = MutableStateFlow(SortMode.NEWEST)
 
     val query: StateFlow<String> = _query.asStateFlow()
     val rarityFilter: StateFlow<Rarity?> = _rarity.asStateFlow()
+    val tagFilter: StateFlow<String?> = _tag.asStateFlow()
     val sort: StateFlow<SortMode> = _sort.asStateFlow()
+
     val pagedCars: Flow<PagingData<CarEntity>> =
-        combine(userId, _query.debounce { if (it.isEmpty()) 0L else 250L }, _rarity, _sort) { u, q, r, s ->
-            GarageParams(u, q, r, s)
+        combine(userId, _query.debounce { if (it.isEmpty()) 0L else 250L }, _rarity, _tag, _sort) { u, q, r, t, s ->
+            GarageParams(u, q, r, t, s)
         }
             .distinctUntilChanged()
             .flatMapLatest { p ->
                 if (p.userId.isBlank()) flowOf(PagingData.empty())
-                else repo.pagedCars(p.userId, p.query, p.rarity, p.sort)
+                else repo.pagedCars(p.userId, p.query, p.rarity, p.tag, p.sort)
             }
             .cachedIn(viewModelScope)
 
@@ -183,11 +191,24 @@ class GarageViewModel(app: Application) : AndroidViewModel(app) {
 
     fun resetCorrection() { _correction.value = CorrectionState.Idle }
 
+    val allTags: StateFlow<List<String>> = userId
+        .flatMapLatest { if (it.isBlank()) flowOf(emptyList()) else repo.allTags(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun tagsFor(carId: Long): Flow<List<String>> = repo.tagsFor(carId)
+    fun addTag(carId: Long, raw: String) { viewModelScope.launch { repo.addTag(carId, raw) } }
+    fun removeTag(carId: Long, tag: String) { viewModelScope.launch { repo.removeTag(carId, tag) } }
+
+    fun saveDetails(car: CarEntity, note: String, spottedAt: Long, onDone: (CarEntity) -> Unit) {
+        viewModelScope.launch { onDone(repo.updateDetails(car, note, spottedAt)) }
+    }
+
     fun setUser(id: String) { userId.value = id }
     fun setQuery(value: String) { _query.value = value }
     fun setRarity(value: Rarity?) { _rarity.value = value }
+    fun setTag(value: String?) { _tag.value = value }
     fun toggleSort() {
-        _sort.value = if (_sort.value == SortMode.NEWEST) SortMode.TOP_POINTS else SortMode.NEWEST
+        _sort.value = SortMode.entries[(_sort.value.ordinal + 1) % SortMode.entries.size]
     }
     fun delete(car: CarEntity) { viewModelScope.launch { repo.delete(car) } }
 }
@@ -195,7 +216,7 @@ class GarageViewModel(app: Application) : AndroidViewModel(app) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GarageScreen(
-    user: FirebaseUser,
+    user: AppUser,
     onScan: () -> Unit,
     onProfile: () -> Unit,
     vm: GarageViewModel = viewModel(),
@@ -206,10 +227,17 @@ fun GarageScreen(
     val stats by vm.stats.collectAsStateWithLifecycle()
     val query by vm.query.collectAsStateWithLifecycle()
     val rarityFilter by vm.rarityFilter.collectAsStateWithLifecycle()
+    val tagFilter by vm.tagFilter.collectAsStateWithLifecycle()
     val sort by vm.sort.collectAsStateWithLifecycle()
+    val allTags by vm.allTags.collectAsStateWithLifecycle()
+
+    LaunchedEffect(allTags) {
+        if (tagFilter != null && tagFilter !in allTags) vm.setTag(null)
+    }
 
     var selected by remember { mutableStateOf<CarEntity?>(null) }
     var confirmDelete by remember { mutableStateOf<CarEntity?>(null) }
+    var editingNotes by remember { mutableStateOf<CarEntity?>(null) }
     val focusManager = LocalFocusManager.current
 
     Scaffold(
@@ -240,6 +268,9 @@ fun GarageScreen(
                     onQuery = vm::setQuery,
                     rarity = rarityFilter,
                     onRarity = vm::setRarity,
+                    tags = allTags,
+                    tag = tagFilter,
+                    onTag = vm::setTag,
                     sort = sort,
                     onSort = vm::toggleSort,
                     focusManager = focusManager,
@@ -298,6 +329,15 @@ fun GarageScreen(
                         Text("+${car.points} pts", color = Gold, style = MaterialTheme.typography.titleLarge)
                     }
                     CarDetailContent(car)
+                    NotesSection(car = car, onEdit = { editingNotes = car })
+                    val carTags by remember(car.id) { vm.tagsFor(car.id) }
+                        .collectAsStateWithLifecycle(initialValue = emptyList<String>())
+                    AlbumsSection(
+                        tags = carTags,
+                        suggestions = allTags,
+                        onAdd = { vm.addTag(car.id, it) },
+                        onRemove = { vm.removeTag(car.id, it) },
+                    )
                     TextButton(
                         onClick = { vm.resetCorrection(); correcting = true },
                         modifier = Modifier.fillMaxWidth(),
@@ -310,6 +350,17 @@ fun GarageScreen(
                 }
             }
         }
+    }
+
+    editingNotes?.let { car ->
+        EditNoteDialog(
+            car = car,
+            onSave = { note, spottedAt ->
+                vm.saveDetails(car, note, spottedAt) { updated -> selected = updated }
+                editingNotes = null
+            },
+            onDismiss = { editingNotes = null },
+        )
     }
 
     confirmDelete?.let { car ->
@@ -328,7 +379,7 @@ fun GarageScreen(
 }
 
 @Composable
-private fun Header(user: FirebaseUser, stats: ProfileStats?, onProfile: () -> Unit) {
+private fun Header(user: AppUser, stats: ProfileStats?, onProfile: () -> Unit) {
     val points = stats?.points ?: 0
     val level = Levels.forPoints(points)
     val rarest = stats?.rarityCounts?.keys?.maxOrNull()
@@ -404,6 +455,9 @@ private fun Controls(
     onQuery: (String) -> Unit,
     rarity: Rarity?,
     onRarity: (Rarity?) -> Unit,
+    tags: List<String>,
+    tag: String?,
+    onTag: (String?) -> Unit,
     sort: SortMode,
     onSort: () -> Unit,
     focusManager: FocusManager,
@@ -413,7 +467,7 @@ private fun Controls(
             value = query,
             onValueChange = onQuery,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Search your garage") },
+            placeholder = { Text("Search cars, notes and albums") },
             leadingIcon = { Icon(Icons.Rounded.Search, null) },
             trailingIcon = {
                 if (query.isNotEmpty()) {
@@ -434,6 +488,21 @@ private fun Controls(
             item { RarityFilterChip(null, rarity == null) { onRarity(null) } }
             items(Rarity.entries.reversed()) { r ->
                 RarityFilterChip(r, rarity == r) { onRarity(if (rarity == r) null else r) }
+            }
+        }
+        if (tags.isNotEmpty()) {
+            Text("Albums", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(tags) { t ->
+                    FilterChip(
+                        selected = tag == t,
+                        onClick = { onTag(if (tag == t) null else t) },
+                        label = { Text(Tags.label(t)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f),
+                        ),
+                    )
+                }
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

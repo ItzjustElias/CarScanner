@@ -15,8 +15,8 @@ fun formatCompact(value: Long, compactFrom: Long = 1_000L): String {
         scaled /= 1_000
         index++
     }
-    var rounded = (scaled * 10).roundToLong() / 10.0
-    if (rounded >= 1_000 && index < SUFFIXES.lastIndex) { // round so 999,999 becomes 1M :)
+    var rounded = (scaled * 10).roundToLong() / 10.0      // one decimal
+    if (rounded >= 1_000 && index < SUFFIXES.lastIndex) { // 999,999 -> "1M", not "1000k"
         rounded /= 1_000
         index++
     }
