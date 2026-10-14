@@ -44,11 +44,13 @@ object ImageUtils {
         return Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
     }
 
-    fun toBase64Jpeg(bitmap: Bitmap, quality: Int = 85): String {
+    fun toJpegBytes(bitmap: Bitmap, quality: Int = 85): ByteArray {
         val out = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out)
-        return Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP)
+        return out.toByteArray()
     }
+
+    fun base64(bytes: ByteArray): String = Base64.encodeToString(bytes, Base64.NO_WRAP)
 
     fun saveJpeg(bitmap: Bitmap, file: File, quality: Int = 85) {
         file.parentFile?.mkdirs()
