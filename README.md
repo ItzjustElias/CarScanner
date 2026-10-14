@@ -81,18 +81,19 @@ your **garage** with a collection of cards.
 
 ## 🎯 Features
 
-| | Feature | Details |
-|---|---|---|
-| 📸 | **Two ways to scan** | Live camera with a viewfinder, or pick an image from your gallery |
-| 🧠 | **AI identification** | Make, model, year, body style, estimated value, production numbers and a fun fact |
-| 💎 | **7 rarity tiers** | From Common all the way to Divine, which has an animated rainbow |
-| 🏆 | **Points and levels** | Score depends on rarity, value, how few were built, age and AI certainty |
-| 🏠 | **Garage** | Your collection as rarity-colored cards, paged for speed, with search, filters and sorting |
-| 📊 | **Profile page** | Level, total garage value, unique models, scans this week, favorite brand, per-rarity breakdown, best scoring and most valuable cars |
-| 🛠️ | **Fix wrong scans** | Tap **"Not the right car?"**, type the real car and the AI fills in the details |
-| 🔐 | **Google sign-in** | With delete and sign-out confirmations |
-| 🌐 | **Web-search grounding** | Optional, lets the AI look up very new cars |
-| 🔒 | **Local data** | Everything stays **on your phone**, separate per Google account |
+|     | Feature                  | Details                                                                                                                             |
+|-----|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
+| 📸  | **Two ways to scan**     | Live camera with a viewfinder, or pick an image from your gallery                                                                   |
+| 🧠  | **AI identification**    | Make, model, year, body style, estimated value, production numbers and a fun fact                                                   |
+| 💎  | **7 rarity tiers**       | From Common all the way to Divine, which has an animated rainbow                                                                    |
+| 🏆  | **Points and levels**    | Score depends on rarity, value, how few were built, age and AI certainty                                                            |
+| 🏠  | **Garage**               | Your collection as rarity-colored cards, paged for speed, with search, filters and sorting                                          |
+| 📊  | **Profile page**         | Level, total garage value, unique models, scans this week, favorite brand, per-rarity breakdown, best scoring and most valuable cars |
+| 🛠️ | **Fix wrong scans**      | Tap **"Not the right car?"**, type the real car and the AI fills in the details                                                     |
+| 🔐  | **Google sign-in**       | With delete and sign-out confirmations                                                                                              |
+| 🌐  | **Web-search grounding** | Optional, lets the AI look up very new cars                                                                                         |
+| 🔒  | **Local data**           | Everything stays **on your phone**, separate per Google account                                                                     |
+| 🗒️ | **Notes**                | **New!** You can now edit, make and save notes on your car photos                                                                   |
 
 > [!NOTE]
 > Re-scanning a model you already own only earns **10%** of the normal points, so no farming the same parked Civic.
