@@ -1,4 +1,4 @@
-# Contributing to AI Scanner (Kotlin + Gemini)
+# Contributing to Car Scanner (Kotlin + Gemini)
 
 First off, thank you for taking the time to contribute! 🎉 
 
@@ -14,7 +14,7 @@ If you find a bug in the app, please open an issue and include:
 * Logcat output if applicable.
 
 ### Suggesting Enhancements
-Have an idea to make the AI scanner better? Open an issue with the label `enhancement` and describe your idea clearly.
+Have an idea to make the Car scanner better? Open an issue with the label `enhancement` and describe your idea clearly.
 
 ### Pull Requests (PRs)
 1. Fork the repository.
