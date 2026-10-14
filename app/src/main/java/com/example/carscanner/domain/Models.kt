@@ -36,6 +36,7 @@ object RarityRules {
 enum class SortMode(val label: String) {
     NEWEST("Newest first"),
     TOP_POINTS("Most points"),
+    SPOTTED("Date spotted"),
 }
 
 data class CarScan(
@@ -60,6 +61,7 @@ class ScanException(message: String) : Exception(message)
 data class LevelInfo(val level: Int, val progress: Float, val pointsToNext: Int)
 
 object Levels {
+    // Level n starts at 50 * (n-1)^2 points.
     fun forPoints(points: Int): LevelInfo {
         val level = sqrt(points / 50.0).toInt() + 1
         val start = 50 * (level - 1) * (level - 1)

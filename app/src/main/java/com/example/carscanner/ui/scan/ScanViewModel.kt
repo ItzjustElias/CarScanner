@@ -18,6 +18,7 @@ sealed interface ScanUiState {
     data object Analyzing : ScanUiState
     data class Success(val car: CarEntity, val duplicate: Boolean) : ScanUiState
     data object NoCar : ScanUiState
+    data class AlreadyScanned(val car: CarEntity) : ScanUiState
     data class Error(val message: String) : ScanUiState
 }
 
@@ -34,6 +35,7 @@ class ScanViewModel(app: Application) : AndroidViewModel(app) {
                 when (val result = repo.scan(userId, uri)) {
                     is SaveOutcome.Saved -> ScanUiState.Success(result.car, result.duplicate)
                     SaveOutcome.NoCar -> ScanUiState.NoCar
+                    is SaveOutcome.AlreadyScanned -> ScanUiState.AlreadyScanned(result.car)
                 }
             } catch (e: ScanException) {
                 ScanUiState.Error(e.message ?: "Scan failed.")

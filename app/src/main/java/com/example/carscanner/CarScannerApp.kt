@@ -7,6 +7,7 @@ import com.example.carscanner.data.AppDatabase
 import com.example.carscanner.data.CarRepository
 import com.example.carscanner.data.GeminiService
 
+/** Tiny manual dependency container. Plenty for an app this size. */
 class AppContainer(context: Context) {
     private val database = AppDatabase.build(context)
     val auth = AuthManager(context)

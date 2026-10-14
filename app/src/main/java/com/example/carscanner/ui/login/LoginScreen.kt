@@ -21,6 +21,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -46,8 +47,11 @@ data class LoginUiState(val loading: Boolean = false, val error: String? = null)
 
 class LoginViewModel(app: Application) : AndroidViewModel(app) {
     private val auth = (app as CarScannerApp).container.auth
+    val googleAvailable = auth.googleAvailable
     private val _state = MutableStateFlow(LoginUiState())
     val state = _state.asStateFlow()
+
+    fun continueAsGuest() = auth.continueAsGuest()
 
     fun signIn(activityContext: android.content.Context) {
         if (_state.value.loading) return
@@ -97,16 +101,29 @@ fun LoginScreen(vm: LoginViewModel = viewModel()) {
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(40.dp))
-            Button(
-                onClick = { vm.signIn(context) },
-                enabled = !state.loading,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF1F1F1F)),
-            ) {
-                if (state.loading) {
-                    CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp, color = Color(0xFF1F1F1F))
-                } else {
-                    Text("Continue with Google", style = MaterialTheme.typography.titleMedium)
+            if (vm.googleAvailable) {
+                Button(
+                    onClick = { vm.signIn(context) },
+                    enabled = !state.loading,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color(0xFF1F1F1F)),
+                ) {
+                    if (state.loading) {
+                        CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp, color = Color(0xFF1F1F1F))
+                    } else {
+                        Text("Continue with Google", style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = vm::continueAsGuest, enabled = !state.loading) {
+                    Text("Continue as guest")
+                }
+            } else {
+                Button(
+                    onClick = vm::continueAsGuest,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                ) {
+                    Text("Get started", style = MaterialTheme.typography.titleMedium)
                 }
             }
             state.error?.let {

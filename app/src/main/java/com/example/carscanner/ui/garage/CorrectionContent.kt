@@ -36,10 +36,9 @@ import com.example.carscanner.data.CarEntity
 import com.example.carscanner.data.CorrectionPreview
 import com.example.carscanner.ui.components.RarityChip
 import com.example.carscanner.ui.components.StatTile
-import com.example.carscanner.ui.theme.Gold
-import java.text.NumberFormat
 import com.example.carscanner.ui.components.formatCompact
 import com.example.carscanner.ui.components.formatCompactUsd
+import com.example.carscanner.ui.theme.Gold
 
 sealed interface CorrectionState {
     data object Idle : CorrectionState
@@ -133,10 +132,9 @@ private fun PreviewCard(car: CarEntity, preview: CorrectionPreview, onConfirm: (
         RarityChip(scan.rarity)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatTile("Value", scan.valueUsd?.let { formatCompactUsd(it) } ?: "Unknown", Modifier.weight(1f))
-            scan.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown"
             StatTile(
                 "Built",
-                scan.productionCount?.let { NumberFormat.getIntegerInstance().format(it) } ?: "Unknown",
+                scan.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown",
                 Modifier.weight(1f),
             )
         }

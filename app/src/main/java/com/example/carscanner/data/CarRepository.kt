@@ -7,12 +7,14 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.carscanner.domain.AnalysisOutcome
 import com.example.carscanner.domain.CarScan
+import com.example.carscanner.domain.Notes
+import com.example.carscanner.domain.Hashing
 import com.example.carscanner.domain.Rarity
+import com.example.carscanner.domain.SearchQuery
 import com.example.carscanner.domain.SortMode
+import com.example.carscanner.domain.Tags
 import com.example.carscanner.domain.PointsCalculator
 import com.example.carscanner.domain.ScanException
-import com.example.carscanner.domain.SearchQuery
-import com.example.carscanner.domain.Hashing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -47,9 +49,10 @@ class CarRepository(
     private val dao: CarDao,
     private val gemini: GeminiService,
 ) {
-    fun pagedCars(userId: String, query: String, rarity: Rarity?, sort: SortMode): Flow<PagingData<CarEntity>> =
+    // 20 cars per home page -> keeps the home page fast
+    fun pagedCars(userId: String, query: String, rarity: Rarity?, tag: String?, sort: SortMode): Flow<PagingData<CarEntity>> =
         Pager(PagingConfig(pageSize = 20, prefetchDistance = 10, enablePlaceholders = false)) {
-            dao.pagingSource(userId, SearchQuery.escapeLike(query.trim()), rarity?.name ?: "", sort.ordinal)
+            dao.pagingSource(userId, SearchQuery.escapeLike(query.trim()), rarity?.name ?: "", tag ?: "", sort.ordinal)
         }.flow
 
     fun summary(userId: String): Flow<ProfileStats> = combine(
@@ -132,10 +135,30 @@ class CarRepository(
                     imagePath = file.absolutePath,
                     scannedAt = now,
                     photoHash = hash,
+                    spottedAt = now,
                 )
                 SaveOutcome.Saved(entity.copy(id = dao.insert(entity)), duplicate)
             }
         }
+    }
+
+    fun tagsFor(carId: Long): Flow<List<String>> = dao.observeTags(carId)
+
+    fun allTags(userId: String): Flow<List<String>> = dao.observeAllTags(userId)
+
+    suspend fun addTag(carId: Long, raw: String): Boolean {
+        val tag = Tags.normalize(raw) ?: return false
+        if (dao.countTags(carId) >= Tags.MAX_PER_CAR) return false
+        dao.insertTag(CarTag(carId, tag))
+        return true
+    }
+
+    suspend fun removeTag(carId: Long, tag: String) = dao.deleteTag(carId, tag)
+
+    suspend fun updateDetails(car: CarEntity, note: String, spottedAt: Long): CarEntity = withContext(Dispatchers.IO) {
+        val clean = Notes.clean(note)
+        dao.updateDetails(car.id, clean, spottedAt)
+        car.copy(note = clean, spottedAt = spottedAt)
     }
 
     suspend fun lookupCorrection(car: CarEntity, query: String): CorrectionPreview = withContext(Dispatchers.IO) {

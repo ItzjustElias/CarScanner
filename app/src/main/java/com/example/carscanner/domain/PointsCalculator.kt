@@ -11,6 +11,7 @@ object PointsCalculator {
     fun calculate(scan: CarScan, duplicate: Boolean): Int {
         var points = scan.rarity.basePoints.toDouble()
 
+        // Value: $10k ~ +32, $100k ~ +40, $1M ~ +48
         scan.valueUsd?.takeIf { it > 0 }?.let { points += log10(it.toDouble()) * 8 }
 
         // Low production run bonus
@@ -24,6 +25,7 @@ object PointsCalculator {
             }
         }
 
+        // Classic bonus
         yearRegex.find(scan.yearText)?.value?.toIntOrNull()?.let { year ->
             val age = Calendar.getInstance().get(Calendar.YEAR) - year
             points += when {
@@ -33,8 +35,10 @@ object PointsCalculator {
             }
         }
 
+        // Less certain identification = fewer points
         points *= 0.6 + 0.4 * scan.confidence.coerceIn(0f, 1f)
 
+        // Seen this model before? Only 10%.
         if (duplicate) points *= 0.1
 
         return max(1, points.roundToInt())

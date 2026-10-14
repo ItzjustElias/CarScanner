@@ -30,7 +30,6 @@ import com.example.carscanner.data.CarEntity
 import com.example.carscanner.domain.Rarity
 import com.example.carscanner.ui.theme.rarityBrush
 import java.io.File
-import java.text.NumberFormat
 
 @Composable
 fun RarityDot(rarity: Rarity, modifier: Modifier = Modifier) {
@@ -113,10 +112,9 @@ fun CarDetailContent(car: CarEntity, modifier: Modifier = Modifier) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatTile("Value", car.valueUsd?.let { formatCompactUsd(it) } ?: "Unknown", Modifier.weight(1f))
-            car.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown"
             StatTile(
                 "Built",
-                car.productionCount?.let { NumberFormat.getIntegerInstance().format(it) } ?: "Unknown",
+                car.productionCount?.let { formatCompact(it, compactFrom = 100_000L) } ?: "Unknown",
                 Modifier.weight(1f),
             )
             StatTile("Certainty", "${(car.confidence * 100).toInt()}%", Modifier.weight(1f))
