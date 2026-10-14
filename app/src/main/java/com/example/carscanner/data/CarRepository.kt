@@ -11,6 +11,7 @@ import com.example.carscanner.domain.Rarity
 import com.example.carscanner.domain.SortMode
 import com.example.carscanner.domain.PointsCalculator
 import com.example.carscanner.domain.ScanException
+import com.example.carscanner.domain.SearchQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -46,7 +47,7 @@ class CarRepository(
 ) {
     fun pagedCars(userId: String, query: String, rarity: Rarity?, sort: SortMode): Flow<PagingData<CarEntity>> =
         Pager(PagingConfig(pageSize = 20, prefetchDistance = 10, enablePlaceholders = false)) {
-            dao.pagingSource(userId, query.trim(), rarity?.name ?: "", sort.ordinal)
+            dao.pagingSource(userId, SearchQuery.escapeLike(query.trim()), rarity?.name ?: "", sort.ordinal)
         }.flow
 
     fun summary(userId: String): Flow<ProfileStats> = combine(
