@@ -11,6 +11,7 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         fun build(context: Context): AppDatabase =
-            Room.databaseBuilder(context, AppDatabase::class.java, "carscanner.db").build()
+            Room.databaseBuilder(context, AppDatabase::class.java, "carscanner.db")
+                .addMigrations(MIGRATION_1_2).build()
     }
 }

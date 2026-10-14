@@ -72,6 +72,9 @@ interface CarDao {
     @Update
     suspend fun update(car: CarEntity)
 
+    @Query("SELECT * FROM cars WHERE userId = :userId AND photoHash = :hash LIMIT 1")
+    suspend fun findByPhotoHash(userId: String, hash: String): CarEntity?
+
     @Insert
     suspend fun insert(car: CarEntity): Long
 

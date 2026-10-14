@@ -21,7 +21,8 @@ data class CarEntity(
     val points: Int,
     val imagePath: String,
     val scannedAt: Long,
-) {
+    val photoHash: String? = null,
+    ) {
     val rarityEnum: Rarity get() = Rarity.parse(rarity)
     val title: String get() = "$make $model".trim()
 }

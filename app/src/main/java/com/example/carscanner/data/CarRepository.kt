@@ -12,6 +12,7 @@ import com.example.carscanner.domain.SortMode
 import com.example.carscanner.domain.PointsCalculator
 import com.example.carscanner.domain.ScanException
 import com.example.carscanner.domain.SearchQuery
+import com.example.carscanner.domain.Hashing
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -22,6 +23,7 @@ import java.util.UUID
 sealed interface SaveOutcome {
     data class Saved(val car: CarEntity, val duplicate: Boolean) : SaveOutcome
     data object NoCar : SaveOutcome
+    data class AlreadyScanned(val car: CarEntity) : SaveOutcome
 }
 
 data class CorrectionPreview(val scan: CarScan, val points: Int)
@@ -100,7 +102,11 @@ class CarRepository(
         val bitmap = ImageUtils.loadBitmap(context, uri)
             ?: throw ScanException("Couldn't read that image.")
 
-        when (val outcome = gemini.analyze(ImageUtils.toBase64Jpeg(bitmap))) {
+        val jpeg = ImageUtils.toJpegBytes(bitmap)
+        val hash = Hashing.sha256Hex(jpeg)
+        dao.findByPhotoHash(userId, hash)?.let { return@withContext SaveOutcome.AlreadyScanned(it) }
+
+        when (val outcome = gemini.analyze(ImageUtils.base64(jpeg))) {
             AnalysisOutcome.NotACar -> SaveOutcome.NoCar
             is AnalysisOutcome.Car -> {
                 val scan = outcome.scan
@@ -110,6 +116,7 @@ class CarRepository(
                 val file = File(context.filesDir, "scans/${UUID.randomUUID()}.jpg")
                 ImageUtils.saveJpeg(bitmap, file)
 
+                val now = System.currentTimeMillis()
                 val entity = CarEntity(
                     userId = userId,
                     make = scan.make,
@@ -123,7 +130,8 @@ class CarRepository(
                     confidence = scan.confidence,
                     points = points,
                     imagePath = file.absolutePath,
-                    scannedAt = System.currentTimeMillis(),
+                    scannedAt = now,
+                    photoHash = hash,
                 )
                 SaveOutcome.Saved(entity.copy(id = dao.insert(entity)), duplicate)
             }
